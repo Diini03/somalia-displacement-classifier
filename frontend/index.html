@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Predict whether a Somalia displacement event will become a large-scale humanitarian emergency using machine learning." />
+  <title>Somalia Displacement Severity Classifier</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ── HEADER ─────────────────────────────────── -->
+<header class="site-header">
+  <a class="header-brand" href="#">
+    <div class="pulse-dot"></div>
+    <span class="brand-text">Somalia Displacement <strong>Severity Classifier</strong></span>
+  </a>
+  <span class="header-meta">IDMC · 3,091 events · 2025–2026</span>
+</header>
+
+<!-- ── PAGE ───────────────────────────────────── -->
+<div class="page-wrapper">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-eyebrow">
+      <span></span>
+      ML-Powered Humanitarian Tool
+    </div>
+    <h1>Somalia Displacement<br><em>Severity Classifier</em></h1>
+    <p class="hero-desc">
+      Predict whether an incoming displacement event in Somalia is likely to become a large-scale humanitarian emergency —
+      before it peaks. Built for field officers, NGO coordinators, and emergency response teams who need to act fast.
+      Enter four basic details about an event and the model returns an immediate severity assessment,
+      giving response teams a critical early-warning window to pre-position supplies and staff.
+    </p>
+    <div class="hero-tags">
+      <span class="tag">Binary Classification</span>
+      <span class="tag">XGBoost · Random Forest · Logistic Regression</span>
+      <span class="tag">IDMC Open Data</span>
+      <span class="tag">Somalia IDP Events</span>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- MODEL SELECTOR -->
+  <div class="model-selector">
+    <span class="section-label">Choose a model — XGBoost is recommended (highest recall)</span>
+    <div class="model-grid">
+
+      <div class="model-card" id="mc-lr" onclick="selectModel('lr')">
+        <div class="mc-name">Logistic Regression</div>
+        <div class="mc-recall">Recall <strong id="recall-lr">—</strong></div>
+      </div>
+
+      <div class="model-card" id="mc-rf" onclick="selectModel('rf')">
+        <div class="mc-name">Random Forest</div>
+        <div class="mc-recall">Recall <strong id="recall-rf">—</strong></div>
+      </div>
+
+      <div class="model-card active" id="mc-xgb" onclick="selectModel('xgb')">
+        <div class="best-tag">Best</div>
+        <div class="mc-name">XGBoost</div>
+        <div class="mc-recall">Recall <strong id="recall-xgb">—</strong></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <div class="form-card">
+    <span class="section-label">Event Details</span>
+    <div class="form-grid">
+
+      <div class="fg full">
+        <label for="combined_type">Cause of Displacement</label>
+        <span class="hint">Select the primary reason that caused people to be displaced.</span>
+        <select id="combined_type">
+          <option value="">Select a cause</option>
+          <option value="Conflict">Conflict — armed violence or clashes</option>
+          <option value="Drought">Drought — prolonged water and food scarcity</option>
+          <option value="Flood">Flood — heavy rain or river overflow</option>
+        </select>
+      </div>
+
+      <div class="fg full">
+        <label for="region">Region</label>
+        <span class="hint">The administrative region of Somalia where the event occurred.</span>
+        <select id="region">
+          <option value="">Select a region</option>
+          <option value="Banaadir">Banaadir (Mogadishu)</option>
+          <option value="Bay">Bay</option>
+          <option value="Bakool">Bakool</option>
+          <option value="Bari">Bari</option>
+          <option value="Gedo">Gedo</option>
+          <option value="Hiiraan">Hiiraan</option>
+          <option value="Lower Juba">Lower Juba</option>
+          <option value="Middle Juba">Middle Juba</option>
+          <option value="Mudug">Mudug</option>
+          <option value="Sanaag">Sanaag</option>
+          <option value="Other">Other / Unknown</option>
+        </select>
+      </div>
+
+      <div class="fg">
+        <label for="month">Month</label>
+        <span class="hint">The month in which the displacement event began.</span>
+        <select id="month">
+          <option value="">Select month</option>
+          <option value="1">January</option>
+          <option value="2">February</option>
+          <option value="3">March</option>
+          <option value="4">April</option>
+          <option value="5">May</option>
+          <option value="6">June</option>
+          <option value="7">July</option>
+          <option value="8">August</option>
+          <option value="9">September</option>
+          <option value="10">October</option>
+          <option value="11">November</option>
+          <option value="12">December</option>
+        </select>
+      </div>
+
+      <div class="fg">
+        <label for="duration_days">Duration (days)</label>
+        <span class="hint">Estimated number of days the displacement event lasted.</span>
+        <input type="number" id="duration_days" placeholder="e.g. 7" min="0" max="365" />
+      </div>
+
+    </div>
+
+    <button class="btn-predict" id="predictBtn" onclick="predict()">
+      Run Prediction
+    </button>
+
+    <div class="loading-row" id="loadingRow">
+      <div class="spinner"></div>
+      Analyzing event — please wait...
+    </div>
+  </div>
+
+  <!-- PLACEHOLDER -->
+  <div class="placeholder-card" id="placeholderCard">
+    <div class="placeholder-icon">📡</div>
+    <h3>Awaiting Input</h3>
+    <p>Fill in the event details above and click <strong>Run Prediction</strong> to receive a severity assessment.</p>
+  </div>
+
+  <!-- RESULT -->
+  <section class="result-section" id="resultSection">
+
+    <span class="section-label" style="margin-bottom:16px;">Prediction Result</span>
+
+    <!-- Main result card -->
+    <div class="result-hero">
+
+      <div class="result-top-row">
+        <div id="resultPrediction" class="result-prediction">—</div>
+        <div id="severityBadge" class="sev-badge">—</div>
+      </div>
+
+      <!-- Confidence bar -->
+      <div class="conf-section">
+        <div class="conf-label-row">
+          <span>Confidence Score</span>
+          <span id="confValue">—</span>
+        </div>
+        <div class="bar-bg">
+          <div class="bar-fill" id="confBar" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Recommended action -->
+      <div class="action-box">
+        <div class="action-box-label">Recommended Response</div>
+        <p id="actionText">—</p>
+      </div>
+
+    </div>
+
+    <!-- Detail cards -->
+    <div class="detail-grid">
+      <div class="detail-card">
+        <div class="dk">Cause</div>
+        <div class="dv" id="dCause">—</div>
+      </div>
+      <div class="detail-card">
+        <div class="dk">Region</div>
+        <div class="dv" id="dRegion">—</div>
+      </div>
+      <div class="detail-card">
+        <div class="dk">Duration</div>
+        <div class="dv" id="dDuration">—</div>
+      </div>
+      <div class="detail-card">
+        <div class="dk">Month</div>
+        <div class="dv" id="dMonth">—</div>
+      </div>
+    </div>
+
+    <p class="model-tag" id="modelUsedLabel">—</p>
+
+  </section>
+
+</div>
+
+<!-- ── FOOTER ──────────────────────────────────── -->
+<footer class="site-footer">
+  <span>IDMC Somalia Displacement Data · <a href="https://data.humdata.org/dataset/som-idmc-idu-events" target="_blank">HDX Source</a></span>
+  <span>Built by <a href="https://diinikahiye.online" target="_blank">Diini Kahiye</a> · Goobo Labs DS/ML Bootcamp 2026</span>
+</footer>
+
+<script src="js/app.js"></script>
+</body>
+</html>
