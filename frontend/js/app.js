@@ -1,5 +1,5 @@
 // ── CONFIG ──────────────────────────────────────
-const API_URL = "http://127.0.0.1:8000"; // swap to Render URL after deploy
+const API_URL = "https://somalia-displacement-classifier.onrender.com/"; // swap to Render URL after deploy
 
 // ── CONSTANTS ───────────────────────────────────
 const MONTHS = [
